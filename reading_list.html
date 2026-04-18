@@ -17,7 +17,7 @@
   .stat-value { font-size: 1.8rem; font-weight: 700; color: #8b6a3e; }
   .stat-label { font-size: 0.75rem; color: #9a9590; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
 
-  .controls { padding: 1.5rem 2rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; max-width: 1400px; margin: 0 auto; }
+  .controls { padding: 1.2rem 2rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; max-width: 920px; margin: 0 auto; }
   input[type=search], select {
     background: #fff; border: 1px solid #ddd8d0; color: #2c2825;
     padding: 0.55rem 1rem; border-radius: 8px; font-size: 0.9rem; outline: none;
@@ -27,23 +27,26 @@
   select { cursor: pointer; }
   .count { margin-left: auto; color: #9a9590; font-size: 0.85rem; white-space: nowrap; }
 
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; padding: 0 2rem 2rem; max-width: 1400px; margin: 0 auto; }
+  .list { max-width: 920px; margin: 0 auto; padding: 0 2rem 2rem; display: flex; flex-direction: column; }
 
-  .card {
-    background: #fff; border: 1px solid #e5e0d8; border-radius: 12px;
-    padding: 1.2rem; display: flex; flex-direction: column; gap: 0.5rem;
-    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
-    cursor: default;
+  .row {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 0.85rem 0; border-bottom: 1px solid #ede9e3;
   }
-  .card:hover { border-color: #c8a97044; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.07); }
+  .row:first-child { border-top: 1px solid #ede9e3; }
 
-  .card-title { font-size: 0.95rem; font-weight: 600; color: #1a1714; line-height: 1.4; }
-  .card-author { font-size: 0.82rem; color: #7a7570; }
+  .row-num { font-size: 0.75rem; color: #c0bab2; width: 2rem; flex-shrink: 0; text-align: right; }
+  .row-title { font-size: 0.92rem; font-weight: 600; color: #1a1714; flex: 1; line-height: 1.4; min-width: 0; }
+  .row-author {
+    font-size: 0.82rem; color: #7a7570;
+    width: 180px; flex-shrink: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .row-meta { display: flex; gap: 0.5rem; flex-shrink: 0; width: 220px; justify-content: flex-end; }
 
-  .card-meta { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.3rem; }
   .badge {
-    font-size: 0.7rem; padding: 2px 8px; border-radius: 20px;
-    background: #f5f3ef; color: #7a7570; border: 1px solid #e5e0d8;
+    font-size: 0.68rem; padding: 2px 7px; border-radius: 20px;
+    border: 1px solid #e5e0d8; white-space: nowrap;
   }
   .badge.year { color: #4a8a78; border-color: #4a8a7822; background: #eef6f4; }
   .badge.pages { color: #6a58a4; border-color: #6a58a422; background: #f2f0f8; }
@@ -51,10 +54,11 @@
 
   .no-results { text-align: center; color: #9a9590; padding: 4rem; font-size: 1rem; }
 
-  @media (max-width: 600px) {
-    .grid { grid-template-columns: 1fr; padding: 0 1rem 2rem; }
+  @media (max-width: 640px) {
+    .row-author { width: 120px; }
+    .row-meta { width: auto; }
     .controls { padding: 1rem; }
-    .stats { gap: 1rem; }
+    .list { padding: 0 1rem 2rem; }
   }
 </style>
 </head>
@@ -81,7 +85,7 @@
   <span class="count" id="count"></span>
 </div>
 
-<div class="grid" id="grid"></div>
+<div class="list" id="list"></div>
 <div class="no-results" id="empty" style="display:none">No books found.</div>
 
 <script>
@@ -114,16 +118,16 @@ function filter() {
   document.getElementById('count').textContent = books.length + ' book' + (books.length !== 1 ? 's' : '');
   document.getElementById('empty').style.display = books.length === 0 ? '' : 'none';
 
-  const grid = document.getElementById('grid');
-  grid.innerHTML = books.map(b => `
-    <div class="card">
-      <div class="card-title">${b.t}</div>
-      <div class="card-author">${b.a}</div>
-      <div class="card-meta">
+  document.getElementById('list').innerHTML = books.map((b, i) => `
+    <div class="row">
+      <span class="row-num">${i + 1}</span>
+      <span class="row-title">${b.t}</span>
+      <span class="row-author" title="${b.a}">${b.a}</span>
+      <span class="row-meta">
         ${b.y ? `<span class="badge year">${b.y}</span>` : ''}
         ${b.p ? `<span class="badge pages">${b.p} pp</span>` : ''}
         ${b.d ? `<span class="badge date">${formatDate(b.d)}</span>` : ''}
-      </div>
+      </span>
     </div>
   `).join('');
 }
