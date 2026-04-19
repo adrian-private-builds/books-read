@@ -57,12 +57,44 @@
   .badge.year { color: #4a8a78; border-color: #4a8a7822; background: #eef6f4; }
   .badge.pages { color: #6a58a4; border-color: #6a58a422; background: #f2f0f8; }
 
+  .view-toggle { display: flex; gap: 0.3rem; }
+  .view-btn {
+    background: #fff; border: 1px solid #ddd8d0; color: #9a9590;
+    padding: 0.5rem 0.65rem; border-radius: 8px; cursor: pointer; font-size: 0.9rem;
+    line-height: 1; transition: border-color 0.15s, color 0.15s;
+  }
+  .view-btn.active { border-color: #8b6a3e; color: #8b6a3e; }
+
   .no-results { text-align: center; color: #9a9590; padding: 4rem; font-size: 1rem; }
+
+  /* Grid view */
+  .grid-view { max-width: 1200px; margin: 0 auto; padding: 0 2rem 2rem;
+    display: none; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 1.2rem; }
+  .grid-view.active { display: grid; }
+  .list.active { display: flex; }
+  .list { display: none; }
+
+  .grid-card { display: flex; flex-direction: column; gap: 0.4rem; cursor: default; }
+  .grid-cover {
+    width: 100%; aspect-ratio: 2/3; border-radius: 4px;
+    background: var(--c); position: relative; overflow: hidden;
+    box-shadow: 3px 3px 8px rgba(0,0,0,0.13), inset -3px 0 6px rgba(0,0,0,0.08);
+  }
+  .grid-cover::after {
+    content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 5px;
+    background: rgba(0,0,0,0.12);
+  }
+  .grid-title {
+    font-size: 0.75rem; font-weight: 600; color: #1a1714; line-height: 1.3;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .grid-author { font-size: 0.68rem; color: #9a9590; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   @media (max-width: 640px) {
     .row-meta { width: auto; }
     .controls { padding: 1rem; }
     .list { padding: 0 1rem 2rem; }
+    .grid-view { padding: 0 1rem 2rem; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
   }
 </style>
 </head>
@@ -88,9 +120,14 @@
     <option value="title">Title A–Z</option>
   </select>
   <span class="count" id="count"></span>
+  <div class="view-toggle">
+    <button class="view-btn active" id="btn-list" onclick="setView('list')" title="List view">☰</button>
+    <button class="view-btn" id="btn-grid" onclick="setView('grid')" title="Grid view">⊞</button>
+  </div>
 </div>
 
-<div class="list" id="list"></div>
+<div class="list active" id="list"></div>
+<div class="grid-view" id="grid"></div>
 <div class="no-results" id="empty" style="display:none">No books found.</div>
 
 <script>
@@ -148,6 +185,23 @@ function filter() {
       </span>
     </div>
   `).join('');
+
+  document.getElementById('grid').innerHTML = books.map(b => `
+    <div class="grid-card">
+      <div class="grid-cover" style="--c:${coverColor(b.t)}"></div>
+      <div class="grid-title">${b.t}</div>
+      <div class="grid-author">${b.a}</div>
+    </div>
+  `).join('');
+}
+
+let currentView = 'list';
+function setView(v) {
+  currentView = v;
+  document.getElementById('list').classList.toggle('active', v === 'list');
+  document.getElementById('grid').classList.toggle('active', v === 'grid');
+  document.getElementById('btn-list').classList.toggle('active', v === 'list');
+  document.getElementById('btn-grid').classList.toggle('active', v === 'grid');
 }
 
 filter();
