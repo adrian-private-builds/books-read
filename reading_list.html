@@ -124,7 +124,7 @@ function filter() {
   });
 
   books = [...books].sort((a, b) => {
-    if (sort === 'author') return a.a.localeCompare(b.a);
+    if (sort === 'author') return a.a.localeCompare(b.a) || (parseInt(a.y) || 9999) - (parseInt(b.y) || 9999);
     if (sort === 'date') return (b.d || '').localeCompare(a.d || '');
     if (sort === 'pages') return b.p - a.p;
     if (sort === 'year') return (b.y || '').localeCompare(a.y || '');
