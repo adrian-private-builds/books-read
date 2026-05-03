@@ -67,6 +67,26 @@
 
   .no-results { text-align: center; color: #9a9590; padding: 4rem; font-size: 1rem; }
 
+  .star-btn {
+    background: none; border: none; cursor: pointer; padding: 0;
+    font-size: 1rem; line-height: 1; color: #d8d0c8;
+    transition: color 0.15s, transform 0.1s; flex-shrink: 0;
+  }
+  .star-btn:hover { transform: scale(1.2); }
+  .star-btn.starred { color: #c8a93e; }
+
+  .grid-star {
+    position: absolute; top: 0.35rem; right: 0.35rem; z-index: 2;
+    background: none; border: none; cursor: pointer; padding: 0;
+    font-size: 0.85rem; line-height: 1; color: rgba(255,255,255,0.5);
+    transition: color 0.15s, transform 0.1s;
+  }
+  .grid-star:hover { transform: scale(1.2); }
+  .grid-star.starred { color: #c8a93e; }
+
+  .fav-btn { }
+  .fav-btn.active { border-color: #c8a93e; color: #c8a93e; }
+
   /* Grid view */
   .grid-view { max-width: 1200px; margin: 0 auto; padding: 0 2rem 2rem;
     display: none; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 1.2rem; }
@@ -129,6 +149,7 @@
     <option value="year">Publication Year</option>
     <option value="title">Title A–Z</option>
   </select>
+  <button class="view-btn fav-btn" id="btn-fav" onclick="toggleFavFilter()" title="Show favorites">★ Favorites</button>
   <span class="count" id="count"></span>
   <div class="view-toggle">
     <button class="view-btn" id="btn-list" onclick="setView('list')" title="List view">☰</button>
@@ -167,12 +188,20 @@ function formatDate(d) {
   return months[parseInt(m)-1] + ' ' + parseInt(day) + ', ' + y;
 }
 
+const FAVS = new Set(JSON.parse(localStorage.getItem('favs') || '[]'));
+function bookKey(b) { return b.t + '|' + b.a; }
+function saveFavs() { localStorage.setItem('favs', JSON.stringify([...FAVS])); }
+function toggleFav(key) { FAVS.has(key) ? FAVS.delete(key) : FAVS.add(key); saveFavs(); filter(); }
+let favOnly = false;
+function toggleFavFilter() { favOnly = !favOnly; document.getElementById('btn-fav').classList.toggle('active', favOnly); filter(); }
+
 function filter() {
   const q = document.getElementById('search').value.toLowerCase();
   const sort = document.getElementById('sort').value;
 
   let books = BOOKS.filter(b => {
     if (q && !b.t.toLowerCase().includes(q) && !b.a.toLowerCase().includes(q)) return false;
+    if (favOnly && !FAVS.has(bookKey(b))) return false;
     return true;
   });
 
@@ -188,7 +217,9 @@ function filter() {
   document.getElementById('count').textContent = books.length + ' book' + (books.length !== 1 ? 's' : '');
   document.getElementById('empty').style.display = books.length === 0 ? '' : 'none';
 
-  document.getElementById('list').innerHTML = books.map(b => `
+  document.getElementById('list').innerHTML = books.map(b => {
+    const k = bookKey(b); const starred = FAVS.has(k);
+    return `
     <div class="row">
       <div class="cover" style="--c:${coverColor(b.t)}"></div>
       <div class="row-body">
@@ -199,8 +230,9 @@ function filter() {
         ${b.y ? `<span class="badge year">${b.y}</span>` : ''}
         ${b.p ? `<span class="badge pages">${b.p} pages</span>` : ''}
       </span>
-    </div>
-  `).join('');
+      <button class="star-btn${starred ? ' starred' : ''}" onclick="toggleFav('${k.replace(/'/g,"\\'")}')">★</button>
+    </div>`;
+  }).join('');
 
   const grouped = [];
   const byAuthor = [...books].sort((a, b) => a.a.localeCompare(b.a) || (parseInt(a.y) || 9999) - (parseInt(b.y) || 9999));
@@ -210,9 +242,11 @@ function filter() {
       grouped.push(`<div class="grid-author-header">${b.a}</div>`);
       lastAuthor = b.a;
     }
+    const k = bookKey(b); const starred = FAVS.has(k);
     grouped.push(`
       <div class="grid-card">
-        <div class="grid-cover" style="--c:${coverColor(b.t)}">
+        <div class="grid-cover" style="--c:${coverColor(b.t)}; position:relative;">
+          <button class="grid-star${starred ? ' starred' : ''}" onclick="toggleFav('${k.replace(/'/g,"\\'")}')">★</button>
           <div class="grid-title" style="color:${coverTextColor(b.t)}">${b.t.replace(/\s*(\([^)]+\))/g, '<br><span style="font-weight:400">$1</span>')}</div>
         </div>
       </div>`);
